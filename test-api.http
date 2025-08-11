@@ -1,0 +1,57 @@
+### 测试注册API - 正常注册
+POST http://localhost:8080/api/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "testuser@example.com",
+  "password": "password123",
+  "userType": "BUYER"
+}
+
+### 测试注册API - 用户名重复（允许）
+POST http://localhost:8080/api/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "another@example.com",
+  "password": "password123",
+  "userType": "ORGANIZER"
+}
+
+### 测试注册API - 邮箱重复（不允许）
+POST http://localhost:8080/api/register
+Content-Type: application/json
+
+{
+  "username": "differentuser",
+  "email": "testuser@example.com",
+  "password": "password123",
+  "userType": "BUYER"
+}
+
+### 测试登录API
+POST http://localhost:8080/api/login
+Content-Type: application/json
+
+{
+  "email": "aa123@example.coom",
+  "password": "aa"
+}
+
+### 测试获取用户信息API (需要token)
+GET http://localhost:8080/api/me
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### 测试密码重置API
+POST http://localhost:8080/api/reset-password
+Content-Type: application/json
+
+{
+  "email": "aa123@example.coom",
+  "newPassword": "newpassword123"
+}
+
+### 测试获取分类API
+GET http://localhost:8080/api/categories 
