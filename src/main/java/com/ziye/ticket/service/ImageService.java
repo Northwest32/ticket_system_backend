@@ -1,60 +1,57 @@
 package com.ziye.ticket.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.UUID;
+import java.util.Map;
 
 @Service
 public class ImageService {
 
-    @Value("${app.upload.dir:uploads/event-images/}")
-    private String uploadDir;
-    
-    @Value("${app.base-url:http://localhost:8080}")
-    private String baseUrl;
-    
-    private static final String STATIC_PATH = "/static/event-images/";
+    private final Cloudinary cloudinary;
 
-
-
-    public String uploadEventImage(MultipartFile file) throws IOException {
-        // ensure upload directory exists
-        createUploadDirectory();
-        
-        // generate unique filename
-        String originalFilename = file.getOriginalFilename();
-        String fileExtension = "";
-        if (originalFilename != null && originalFilename.contains(".")) {
-            fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        }
-        
-        String filename = UUID.randomUUID().toString() + fileExtension;
-        
-        // create file path
-        Path uploadPath = Paths.get(uploadDir);
-        Path filePath = uploadPath.resolve(filename);
-        
-        // save file
-        Files.copy(file.getInputStream(), filePath);
-        
-        // return complete accessible URL
-        return baseUrl + STATIC_PATH + filename;
+    @Autowired
+    public ImageService(Cloudinary cloudinary) {
+        this.cloudinary = cloudinary;
     }
 
-    private void createUploadDirectory() {
+    /**
+     * Upload image to Cloudinary
+     * @param file The image file to upload
+     * @return The public URL of the uploaded image
+     * @throws IOException if upload fails
+     */
+    public String uploadEventImage(MultipartFile file) throws IOException {
         try {
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
+            Map<String, Object> uploadResult = cloudinary.uploader().upload(
+                file.getBytes(),
+                ObjectUtils.asMap(
+                    "folder", "event-images",
+                    "resource_type", "auto"
+                )
+            );
+            
+            return (String) uploadResult.get("secure_url");
         } catch (IOException e) {
-            throw new RuntimeException("Failed to create upload directory", e);
+            throw new IOException("Failed to upload image to Cloudinary", e);
+        }
+    }
+
+    /**
+     * Delete image from Cloudinary
+     * @param publicId The public ID of the image to delete
+     * @return true if deletion was successful
+     */
+    public boolean deleteImage(String publicId) {
+        try {
+            Map<String, Object> result = cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+            return "ok".equals(result.get("result"));
+        } catch (IOException e) {
+            return false;
         }
     }
 } 

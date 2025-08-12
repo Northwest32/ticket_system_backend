@@ -40,26 +40,18 @@ public class ImageController {
         }
     }
 
-    @GetMapping("/test-image-access")
-    public CommonResponse<String> testImageAccess() {
+    @DeleteMapping("/delete-image")
+    public CommonResponse<Boolean> deleteImage(@RequestParam("publicId") String publicId) {
         try {
-            // Check if upload directory exists
-            java.nio.file.Path uploadPath = java.nio.file.Paths.get("uploads/event-images/");
-            boolean directoryExists = java.nio.file.Files.exists(uploadPath);
-            
-            // List files in directory
-            String files = "";
-            if (directoryExists) {
-                files = java.nio.file.Files.list(uploadPath)
-                    .map(path -> path.getFileName().toString())
-                    .collect(java.util.stream.Collectors.joining(", "));
+            boolean deleted = imageService.deleteImage(publicId);
+            if (deleted) {
+                return new CommonResponse<>(0, "Image deleted successfully", true);
+            } else {
+                return new CommonResponse<>(1, "Failed to delete image", false);
             }
-            
-            String result = String.format("Directory exists: %s, Files: %s", directoryExists, files);
-            return new CommonResponse<>(0, "Image access test", result);
         } catch (Exception e) {
             e.printStackTrace();
-            return new CommonResponse<>(1, "Test failed: " + e.getMessage(), null);
+            return new CommonResponse<>(1, "Failed to delete image: " + e.getMessage(), false);
         }
     }
 } 
