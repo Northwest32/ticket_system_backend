@@ -13,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.http.HttpMethod;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,19 +42,19 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable()) 
             .addFilterBefore(jwtAuthenticationFilter(), org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/register", "/api/login", "/api/logout","/api/me",
+                .requestMatchers("/api/register", "/api/login", "/api/logout",
                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", 
                 "/api/reset-password", 
-                "/api/events/**",
-                "/api/categories/**",
-                "/api/users/**",
-                "/api/comments/**",
-                "/api/organizer-profile/**",
-                "/api/upload-event-image",
                 "/uploads/**",
                 "/static/**",
                 "/", "/index.html"
                 ).permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/organizers/*/comments").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/events/*/comments").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/comments/*/replies").permitAll()
                 .anyRequest().authenticated()
             );
             
@@ -78,7 +79,17 @@ public class SecurityConfig {
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
                 throws ServletException, IOException {
             
-            System.out.println("Request: " + request.getMethod() + " " + request.getRequestURI());
+            String requestURI = request.getRequestURI();
+            String method = request.getMethod();
+            System.out.println("Request: " + method + " " + requestURI);
+            
+            // Skip JWT processing for public endpoints
+            if (isPublicEndpoint(requestURI, method)) {
+                System.out.println("🔍 JWT Filter: Public endpoint, skipping authentication");
+                filterChain.doFilter(request, response);
+                System.out.println(" Response: " + response.getStatus());
+                return;
+            }
             
             String authHeader = request.getHeader("Authorization");
             System.out.println("🔍 JWT Filter: Authorization header: " + authHeader);
@@ -110,6 +121,34 @@ public class SecurityConfig {
             
             filterChain.doFilter(request, response);
             System.out.println(" Response: " + response.getStatus());
+        }
+        
+        private boolean isPublicEndpoint(String requestURI, String method) {
+            // Always public endpoints (any method)
+            if (requestURI.startsWith("/api/register") ||
+                requestURI.startsWith("/api/login") ||
+                requestURI.startsWith("/api/logout") ||
+                requestURI.startsWith("/v3/api-docs/") ||
+                requestURI.startsWith("/swagger-ui/") ||
+                requestURI.startsWith("/swagger-ui.html") ||
+                requestURI.startsWith("/api/reset-password") ||
+                requestURI.startsWith("/uploads/") ||
+                requestURI.startsWith("/static/") ||
+                requestURI.equals("/") ||
+                requestURI.equals("/index.html")) {
+                return true;
+            }
+            
+            // GET-only public endpoints
+            if ("GET".equals(method)) {
+                return requestURI.startsWith("/api/events/") ||
+                       requestURI.startsWith("/api/categories/") ||
+                       requestURI.matches("/api/organizers/\\d+/comments") ||
+                       requestURI.matches("/api/events/\\d+/comments") ||
+                       requestURI.matches("/api/comments/\\d+/replies");
+            }
+            
+            return false;
         }
     }
 }

@@ -17,7 +17,7 @@ public class CloudinaryController {
     @GetMapping("/signature")
     public Map<String, Object> signature(
             @RequestParam(defaultValue = "ticket-system/uploads") String folder,
-            @RequestParam(required = false) String publicId // 可选：你想自定义文件名
+            @RequestParam(required = false) String publicId 
     ) {
         long timestamp = System.currentTimeMillis() / 1000;
         Map<String, Object> toSign = new HashMap<>();
