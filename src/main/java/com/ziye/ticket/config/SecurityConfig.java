@@ -55,6 +55,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/organizers/*/comments").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/events/*/comments").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/comments/*/replies").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/users/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/organizer-profile/*").permitAll()
                 .anyRequest().authenticated()
             );
             
@@ -135,7 +137,9 @@ public class SecurityConfig {
                 requestURI.startsWith("/uploads/") ||
                 requestURI.startsWith("/static/") ||
                 requestURI.equals("/") ||
-                requestURI.equals("/index.html")) {
+                requestURI.equals("/index.html") ||
+                // Allow direct access to image files (UUID format)
+                requestURI.matches("/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\\.(jpg|jpeg|png|gif|webp)$")) {
                 return true;
             }
             
@@ -145,7 +149,9 @@ public class SecurityConfig {
                        requestURI.startsWith("/api/categories/") ||
                        requestURI.matches("/api/organizers/\\d+/comments") ||
                        requestURI.matches("/api/events/\\d+/comments") ||
-                       requestURI.matches("/api/comments/\\d+/replies");
+                       requestURI.matches("/api/comments/\\d+/replies") ||
+                       requestURI.matches("/api/users/\\d+") ||
+                       requestURI.matches("/api/organizer-profile/\\d+");
             }
             
             return false;
