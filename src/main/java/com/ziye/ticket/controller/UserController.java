@@ -129,16 +129,12 @@ public class UserController {
 
    @PostMapping("/update-avatar")
     public ResponseEntity<CommonResponse<String>> updateAvatar(
-            @RequestParam("avatar") MultipartFile avatarFile,
+            @RequestBody Map<String, String> request,
             HttpServletRequest httpRequest) {
         
         System.out.println("🔍 Update avatar request received");
         System.out.println("🔍 Request method: " + httpRequest.getMethod());
         System.out.println("🔍 Request URI: " + httpRequest.getRequestURI());
-        System.out.println("🔍 Content type: " + httpRequest.getContentType());
-        System.out.println("🔍 File name: " + avatarFile.getOriginalFilename());
-        System.out.println("🔍 File size: " + avatarFile.getSize());
-        System.out.println("🔍 File content type: " + avatarFile.getContentType());
         
         String authHeader = httpRequest.getHeader("Authorization");
         System.out.println("🔍 Authorization header: " + authHeader);
@@ -160,55 +156,29 @@ public class UserController {
         
         Long userId = Long.valueOf(claims.getSubject());
         
-        // Validate file
-        if (avatarFile.isEmpty()) {
-            return ResponseEntity.badRequest().body(new CommonResponse<>(1, "Avatar file is required", null));
+        // Get Cloudinary URL from request
+        String cloudinaryUrl = request.get("avatarUrl");
+        if (cloudinaryUrl == null || cloudinaryUrl.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(new CommonResponse<>(1, "Avatar URL is required", null));
         }
         
-        // Validate file type
-        String contentType = avatarFile.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            return ResponseEntity.badRequest().body(new CommonResponse<>(1, "Only image files are allowed", null));
-        }
-        
-        // Validate file size (5MB limit)
-        if (avatarFile.getSize() > 5 * 1024 * 1024) {
-            return ResponseEntity.badRequest().body(new CommonResponse<>(1, "File size should be less than 5MB", null));
+        // Validate URL format (basic validation)
+        if (!cloudinaryUrl.startsWith("https://res.cloudinary.com/")) {
+            return ResponseEntity.badRequest().body(new CommonResponse<>(1, "Invalid Cloudinary URL format", null));
         }
         
         try {
-            // Create upload directory
-            String uploadDir = "uploads/avatars";
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-            
-            // Generate unique filename
-            String originalFilename = avatarFile.getOriginalFilename();
-            String fileExtension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            }
-            String filename = "avatar_" + userId + "_" + UUID.randomUUID().toString() + fileExtension;
-            
-            // Save file to local storage
-            Path filePath = uploadPath.resolve(filename);
-            Files.write(filePath, avatarFile.getBytes());
-            
-            // Generate access URL (relative path)
-            String avatarUrl = "/uploads/avatars/" + filename;
-            
-            // Update user avatar URL
-            int result = userMapper.updateAvatarUrl(userId, avatarUrl);
+            // Update user avatar URL with Cloudinary URL
+            int result = userMapper.updateAvatarUrl(userId, cloudinaryUrl);
             
             if (result > 0) {
-                return ResponseEntity.ok(new CommonResponse<>(0, "Avatar updated successfully", avatarUrl));
+                return ResponseEntity.ok(new CommonResponse<>(0, "Avatar updated successfully", cloudinaryUrl));
             } else {
                 return ResponseEntity.badRequest().body(new CommonResponse<>(1, "Failed to update avatar", null));
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new CommonResponse<>(1, "Error processing avatar file", null));
+            System.out.println("❌ Error updating avatar: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CommonResponse<>(1, "Error updating avatar", null));
         }
     }
 

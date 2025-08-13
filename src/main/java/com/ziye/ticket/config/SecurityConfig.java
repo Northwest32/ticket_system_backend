@@ -137,9 +137,7 @@ public class SecurityConfig {
                 requestURI.startsWith("/uploads/") ||
                 requestURI.startsWith("/static/") ||
                 requestURI.equals("/") ||
-                requestURI.equals("/index.html") ||
-                // Allow direct access to image files (UUID format)
-                requestURI.matches("/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\\.(jpg|jpeg|png|gif|webp)$")) {
+                requestURI.equals("/index.html")) {
                 return true;
             }
             
