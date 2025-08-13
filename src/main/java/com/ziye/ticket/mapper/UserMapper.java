@@ -45,4 +45,7 @@ public interface UserMapper {
     
     @Update("UPDATE users SET avatar_url = #{avatarUrl} WHERE id = #{id}")
     int updateAvatarUrl(@Param("id") Long id, @Param("avatarUrl") String avatarUrl);
+    
+    @Update("UPDATE users SET avatar_url = NULL WHERE avatar_url LIKE '/uploads/avatars/%'")
+    int cleanOldLocalAvatarPaths();
 }

@@ -18,6 +18,7 @@ import java.util.HashMap;
 import com.ziye.ticket.mapper.UserMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.ziye.ticket.dto.ForgetPassword;
+import com.ziye.ticket.util.AvatarMigrationUtil;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,6 +35,8 @@ public class UserController {
     private UserMapper userMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private AvatarMigrationUtil avatarMigrationUtil;
 
     @PostMapping("/register")
     public ResponseEntity<CommonResponse<String>> register(@RequestBody RegisterRequest request) {
@@ -206,6 +209,17 @@ public class UserController {
         System.out.println("🔍 Authorization header: " + authHeader);
         
         return ResponseEntity.ok(new CommonResponse<>(0, "Upload test successful", "File received: " + file.getOriginalFilename()));
+    }
+    
+    // Clean old local avatar paths (for migration)
+    @PostMapping("/clean-avatar-paths")
+    public ResponseEntity<CommonResponse<String>> cleanAvatarPaths() {
+        try {
+            avatarMigrationUtil.cleanOldLocalAvatarPaths();
+            return ResponseEntity.ok(new CommonResponse<>(0, "Avatar paths cleaned successfully", "Migration completed"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CommonResponse<>(1, "Failed to clean avatar paths", e.getMessage()));
+        }
     }
 
 } 

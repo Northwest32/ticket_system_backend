@@ -57,6 +57,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/comments/*/replies").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/organizer-profile/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/follows/count/*").permitAll()
                 .anyRequest().authenticated()
             );
             
@@ -149,7 +150,8 @@ public class SecurityConfig {
                        requestURI.matches("/api/events/\\d+/comments") ||
                        requestURI.matches("/api/comments/\\d+/replies") ||
                        requestURI.matches("/api/users/\\d+") ||
-                       requestURI.matches("/api/organizer-profile/\\d+");
+                       requestURI.matches("/api/organizer-profile/\\d+") ||
+                       requestURI.matches("/api/follows/count/\\d+");
             }
             
             return false;
