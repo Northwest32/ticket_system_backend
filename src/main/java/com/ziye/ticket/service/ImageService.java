@@ -27,6 +27,7 @@ public class ImageService {
      */
     public String uploadEventImage(MultipartFile file) throws IOException {
         try {
+            @SuppressWarnings("unchecked")
             Map<String, Object> uploadResult = cloudinary.uploader().upload(
                 file.getBytes(),
                 ObjectUtils.asMap(
@@ -48,6 +49,7 @@ public class ImageService {
      */
     public boolean deleteImage(String publicId) {
         try {
+            @SuppressWarnings("unchecked")
             Map<String, Object> result = cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
             return "ok".equals(result.get("result"));
         } catch (IOException e) {

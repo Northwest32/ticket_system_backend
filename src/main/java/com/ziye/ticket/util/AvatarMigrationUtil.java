@@ -3,13 +3,7 @@ package com.ziye.ticket.util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.ziye.ticket.mapper.UserMapper;
-import java.util.List;
-import java.util.Map;
 
-/**
- * 头像URL迁移工具类
- * 用于清理旧的本地头像路径，避免404错误
- */
 @Component
 public class AvatarMigrationUtil {
     
@@ -17,20 +11,20 @@ public class AvatarMigrationUtil {
     private UserMapper userMapper;
     
     /**
-     * 清理旧的本地头像路径
-     * 将 /uploads/avatars/ 开头的路径设置为null
+     * Clean old local avatar paths
+     * Set paths starting with /uploads/avatars/ to null
      */
     public void cleanOldLocalAvatarPaths() {
         try {
             int affectedRows = userMapper.cleanOldLocalAvatarPaths();
-            System.out.println("✅ 头像路径清理完成，影响了 " + affectedRows + " 条记录");
+            System.out.println("✅ Avatar paths cleaned, affected " + affectedRows + " records");
         } catch (Exception e) {
-            System.err.println("❌ 头像路径清理失败: " + e.getMessage());
+            System.err.println("❌ Avatar paths cleaning failed: " + e.getMessage());
         }
     }
     
     /**
-     * 检查用户头像URL格式
+     * Check if the user avatar URL is valid
      * @param avatarUrl 头像URL
      * @return true if valid Cloudinary URL, false otherwise
      */
@@ -42,7 +36,7 @@ public class AvatarMigrationUtil {
     }
     
     /**
-     * 检查是否为旧的本地路径
+     * Check if the avatar URL is an old local path
      * @param avatarUrl 头像URL
      * @return true if old local path, false otherwise
      */

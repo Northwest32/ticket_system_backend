@@ -36,6 +36,8 @@ public class SeckillConcurrencyTest {
 
     @PostConstruct
     public void testRedisConnection() {
+        System.out.println("=== SeckillConcurrencyTest using default application.properties ===");
+        System.out.println("Testing with local database and Redis configuration");
         try {
             String pong = redisTemplate.getConnectionFactory()
                                          .getConnection()
@@ -81,6 +83,13 @@ public class SeckillConcurrencyTest {
         redisTemplate.delete("event:buyer:" + EVENT_ID);
         System.out.println("seckillService = " + seckillService);
         System.out.println("SetUp finished");
+    }
+
+    @Test
+    public void testDatabaseConnection() {
+        System.out.println("Testing database connection...");
+        Event testEvent = eventMapper.findById(1L);
+        System.out.println("Database connection successful, found event: " + (testEvent != null ? testEvent.getTitle() : "null"));
     }
 
     @Test
